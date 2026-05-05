@@ -7,16 +7,22 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 
+/**
+ * COMPONENTE PERFIL: Muestra la información del usuario y su historial de pedidos.
+ * Recupera datos de Supabase filtrando por el ID del usuario logueado.
+ */
 export default function Profile() {
   const { items } = useCart();
-  const [session, setSession] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(null); // Datos de autenticación
+  const [orders, setOrders] = useState<any[]>([]);   // Lista de pedidos del usuario
+  const [loading, setLoading] = useState(true);      // Estado de carga para el feedback visual
 
+  // Al montar el componente, verificamos si hay una sesión activa
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
+        // Si hay usuario, traemos sus pedidos de la DB
         fetchOrders(session.user.id);
       } else {
         setLoading(false);
@@ -24,19 +30,24 @@ export default function Profile() {
     });
   }, []);
 
+  /**
+   * FUNCIÓN PARA TRAER PEDIDOS:
+   * Realiza una consulta (query) a Supabase.
+   * Trae datos de 'orders' y, mediante una relación, también trae sus 'order_items'.
+   */
   const fetchOrders = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('orders')
+        .from('orders') // Tabla principal
         .select(`
           *,
-          order_items (*)
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+          order_items (*) 
+        `) // El '*' significa todos los campos. 'order_items (*)' es un JOIN automático
+        .eq('user_id', userId) // Filtro: Solo los pedidos de ESTE usuario
+        .order('created_at', { ascending: false }); // Ordenar por fecha (más reciente primero)
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders(data || []); // Guardamos los resultados en el estado local
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Error al cargar tus pedidos');

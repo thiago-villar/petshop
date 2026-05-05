@@ -1,32 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 
+/**
+ * CONFIGURACIÓN DE SUPABASE:
+ * Aquí se inicializa la conexión con el Backend (Baas - Backend as a Service).
+ * Utilizamos variables de entorno para no exponer las claves directamente en el código.
+ */
+
+// Extraemos la URL y la Key Anónima de las variables de entorno (.env)
 const rawUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 let supabaseUrl = rawUrl.replace(/\/$/, '');
 
-// Clean URL: Ensure it's just the origin (e.g. https://xyz.supabase.co)
+// Limpieza de URL para asegurar que sea válida
 try {
   if (supabaseUrl.startsWith('http')) {
     const urlObj = new URL(supabaseUrl);
     supabaseUrl = urlObj.origin;
   }
-} catch (e) {
-  // Fallback to whatever was there
-}
+} catch (e) {}
 
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-// Add defensive check for common copy-paste errors
+// Verificación de seguridad para confirmar que el proyecto está conectado
 const isConfigured = 
     supabaseUrl && 
     supabaseAnonKey && 
-    !supabaseUrl.includes('placeholder') && 
     supabaseUrl.startsWith('https://');
 
-if (!isConfigured) {
-  console.error('Supabase credentials missing or invalid! Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.');
-}
-
-// Only attempt to create the client if we have a URL to avoid the "supabaseUrl is required" error
+/**
+ * INSTANCIA DE SUPABASE:
+ * Esta es la variable que importamos en otros archivos para hacer
+ * 'supabase.from(...)' o 'supabase.auth(...)'.
+ */
 export const supabase = createClient(
   isConfigured ? supabaseUrl : 'https://placeholder.supabase.co', 
   isConfigured ? supabaseAnonKey : 'placeholder-key'

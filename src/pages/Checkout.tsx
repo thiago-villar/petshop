@@ -6,13 +6,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 
+/**
+ * COMPONENTE CHECKOUT: Maneja el proceso de pago en 3 pasos.
+ * Usa Supabase para persistir los datos de la compra.
+ */
 export default function Checkout() {
+  // Contexto del carrito y navegación de React Router
   const { items, total, clearCart } = useCart();
   const navigate = useNavigate();
+  
+  // Estados para controlar el paso actual, el estado de carga y la sesión del usuario
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
 
+  // Estado para los campos del formulario de envío y pago
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -24,6 +32,7 @@ export default function Checkout() {
     cvv: ''
   });
 
+  // Al cargar el componente, obtenemos la sesión del usuario para autorrellenar datos
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -37,17 +46,25 @@ export default function Checkout() {
     });
   }, []);
 
+  // Función genérica para actualizar el estado del formulario según el campo
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  /**
+   * MANEJADOR DEL FORMULARIO:
+   * Controla el avance de pasos y la inserción final en la base de datos.
+   */
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Si no estamos en el último paso, solo avanzamos
     if (step < 3) {
       setStep(step + 1);
       return;
     }
 
+    // Validación de seguridad: debe haber un usuario logueado
     if (!session) {
       toast.error('Debes iniciar sesión para finalizar la compra');
       navigate('/auth');
@@ -57,7 +74,10 @@ export default function Checkout() {
     setLoading(true);
 
     try {
-      // 1. Create the order
+      /**
+       * PASO 1: INSERTAR EN LA TABLA 'ORDERS'
+       * Guardamos la información general del pedido.
+       */
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -67,7 +87,7 @@ export default function Checkout() {
           status: 'Enviando'
         })
         .select()
-        .single();
+        .single(); // Pedimos que devuelva el registro creado para obtener el 'id'
 
       if (orderError) {
         console.error('Error insertando pedido:', orderError);
@@ -76,9 +96,12 @@ export default function Checkout() {
 
       if (!order) throw new Error('No se pudo generar el ID del pedido');
 
-      // 2. Create order items - ensure numbers are correct types
+      /**
+       * PASO 2: INSERTAR EN LA TABLA 'ORDER_ITEMS'
+       * Usamos el ID generado arriba para relacionar los productos con el pedido.
+       */
       const orderItems = items.map(item => ({
-        order_id: order.id,
+        order_id: order.id, // Relación Foreing Key
         product_name: String(item.name),
         quantity: Number(item.quantity),
         price: Number(item.price)
@@ -93,6 +116,7 @@ export default function Checkout() {
         throw new Error(itemsError.message);
       }
 
+      // Éxito: Limpiamos carrito y redirigimos al perfil
       toast.success('¡Pedido realizado con éxito!');
       clearCart();
       setTimeout(() => navigate('/profile'), 1500);

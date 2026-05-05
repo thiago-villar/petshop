@@ -19,32 +19,42 @@ import Contact from './pages/Contact';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 
+/**
+ * ARCHIVO PRINCIPAL (App.tsx):
+ * Es el punto de entrada de la aplicación. Aquí se define el Enrutamiento (vías) 
+ * y se comprueba si el usuario está conectado globalmente.
+ */
 export default function App() {
+  // Estado para guardar la sesión del usuario (se comparte en toda la app)
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // EFECTO DE AUTENTICACIÓN:
+  // Se ejecuta una sola vez al cargar la web.
   useEffect(() => {
-    // Get initial session
+    // 1. Pregunta a Supabase si hay una sesión guardada en cookies/localstorage
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         setSession(session);
       })
       .catch(err => {
-        console.error('Supabase session fetch error:', err);
+        console.error('Error al obtener sesión:', err);
       })
       .finally(() => {
         setLoading(false);
       });
 
-    // Listen to Auth changes
+    // 2. Suscripción: Si el usuario inicia o cierra sesión en otra pestaña 
+    // o el token expira, este 'listener' actualiza la app automáticamente.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => subscription.unsubscribe(); // Limpieza al desmontar
   }, []);
 
+  // Mientras se comprueba la sesión, mostramos una pantalla de carga
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -61,14 +71,19 @@ export default function App() {
       <CartProvider>
         <div className="min-h-screen bg-white scroll-smooth selection:bg-orange-500 selection:text-white">
           <Toaster position="top-center" expand={true} richColors />
+          
+          {/* Si hay sesión, mostramos la barra de navegación */}
           {session && <Navbar session={session} />}
           
           <main>
             <Routes>
-              {/* Auth Route - Always available, but redirects to home if already logged in */}
+              {/**
+               * SISTEMA DE RUTAS PROTEGIDAS:
+               * Si no hay sesión, cualquier ruta redirige a /auth (Login).
+               * Si hay sesión, habilitamos el acceso al resto de la página.
+               */}
               <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/" />} />
 
-              {/* Protected Routes - Only available if logged in */}
               {session ? (
                 <>
                   <Route path="/" element={<Home />} />
@@ -82,7 +97,6 @@ export default function App() {
                   <Route path="*" element={<Navigate to="/" />} />
                 </>
               ) : (
-                /* Non-authenticated users are always redirected to /auth */
                 <Route path="*" element={<Navigate to="/auth" />} />
               )}
             </Routes>

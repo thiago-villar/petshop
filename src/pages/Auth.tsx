@@ -4,17 +4,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, LogIn, UserPlus, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2, PawPrint, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
+/**
+ * COMPONENTE DE AUTENTICACIÓN:
+ * Maneja el inicio de sesión (Login) y el registro (Sign Up).
+ * Utiliza Supabase Auth para gestionar los usuarios de forma segura.
+ */
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(true); // Cambia entre modo 'Login' y 'Registro'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  /**
+   * MANEJADOR DE AUTENTICACIÓN:
+   * Función asíncrona que se comunica con el servicio de Supabase.
+   */
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Verificación de configuración (URL y KEY de Supabase)
     if (!isConfigured) {
-        toast.error('Supabase no está configurado. Por favor, añade las variables VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en los ajustes.');
+        toast.error('Supabase no está configurado.');
         return;
     }
 
@@ -22,10 +32,19 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
+        /**
+         * MODO LOGIN: 
+         * Verifica el email y la contraseña contra la base de datos de Auth.
+         */
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success('¡Bienvenido de nuevo a Jakka!');
+        toast.success('¡Bienvenido de nuevo!');
       } else {
+        /**
+         * MODO REGISTRO:
+         * Crea un nuevo registro en Supabase Auth.
+         * Por defecto, Supabase enviará un correo de confirmación.
+         */
         const { error } = await supabase.auth.signUp({ 
           email, 
           password,
@@ -35,6 +54,7 @@ export default function AuthPage() {
         toast.success('¡Revisa tu correo para verificar tu cuenta!');
       }
     } catch (err: any) {
+      // Manejo de errores amigables para el usuario
       toast.error(err.message === 'Invalid login credentials' ? 'Credenciales inválidas' : err.message);
     } finally {
       setLoading(false);
