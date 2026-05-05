@@ -1,11 +1,26 @@
-<div align="center">
+# 🐾 PetShop Pro - Sistema de E-commerce
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Este es un proyecto de tienda de mascotas desarrollado con **React**, **TypeScript**, **Tailwind CSS** y **Supabase**.
 
-  <h1>Built with AI Studio</h2>
+## 🚀 Funcionalidades
+- **Catálogo de Productos**: Vista detallada de alimentos y accesorios.
+- **Carrito de Compras**: Gestión dinámica de productos.
+- **Autenticación Real**: Registro e inicio de sesión con Supabase Auth.
+- **Gestión de Pedidos**: Los pedidos se guardan en la base de datos y se pueden consultar en el perfil del usuario.
+- **Diseño Premium**: Interfaz moderna basada en Bento Grids y animaciones fluidas con Framer Motion.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🛠️ Tecnologías Utilizadas
+- **Frontend**: React 18, Vite.
+- **Estilos**: Tailwind CSS 4.0.
+- **Base de Datos & Auth**: Supabase.
+- **Iconos**: Lucide React.
+- **Notificaciones**: Sonner.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 📦 Cómo mostrar el proyecto (Para la entrega)
+Si vas a mostrar este proyecto en otra computadora:
+1. **GitHub**: Sube el código a tu repositorio.
+2. **Variables de Entorno**: Asegúrate de que el archivo `.env` tenga tu `SUPABASE_URL` y `SUPABASE_ANON_KEY`.
+3. **Base de Datos**: Si usas un proyecto de Supabase nuevo, corre los scripts SQL incluidos en la documentación para crear las tablas `orders` y `order_items`.
 
-</div>
+---
+*Desarrollado para la materia de Programación - 2026*
